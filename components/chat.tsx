@@ -73,10 +73,10 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
         <div className="w-full h-px" ref={visibilityRef} />
       </div>
       <ChatPanel
-        id={id}
-        input={input}
-        setInput={setInput}
-        isAtBottom={isAtBottom}
+          id={id}
+          input={input}
+          setInput={setInput}
+          isAtBottom={isAtBottom}
         scrollToBottom={scrollToBottom}
       />
     </div>
