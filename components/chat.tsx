@@ -31,7 +31,7 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
 
   const resetChat = () => {
     setInput('')
-    setNewChatId(null)
+    setNewChatId(undefined) // null 대신 undefined 사용
     localStorage.removeItem('newChatId')
     router.push('/')
   }
