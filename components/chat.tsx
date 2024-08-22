@@ -102,7 +102,7 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
           resetState();
           router.push('/');
         }}
-        className="fixed bottom-4 right-4 bg-black hover:bg-gray-800 text-white p-2 rounded-full shadow-lg transition-colors duration-200 z-50"
+        className="fixed bottom-4 right-4 bg-black hover:bg-gray-800 text-white p-2 rounded-full shadow-lg transition-colors duration-200 z-50 hidden md:block"
         aria-label="채팅 초기화 및 홈으로 이동"
       >
         <ArrowPathIcon className="w-6 h-6" />
