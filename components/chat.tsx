@@ -11,6 +11,7 @@ import { Message, Session } from '@/lib/types'
 import { usePathname, useRouter } from 'next/navigation'
 import { useScrollAnchor } from '@/lib/hooks/use-scroll-anchor'
 import { toast } from 'sonner'
+import { ArrowPathIcon } from '@heroicons/react/24/solid'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -23,10 +24,17 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
   const router = useRouter()
   const path = usePathname()
   const [input, setInput] = useState('')
-  const [messages] = useUIState()
-  const [aiState] = useAIState()
+  const [messages, setMessages] = useUIState()
+  const [aiState, setAIState] = useAIState()
 
   const [_, setNewChatId] = useLocalStorage('newChatId', id)
+
+  const resetChat = () => {
+    setInput('')
+    setNewChatId(null)
+    localStorage.removeItem('newChatId')
+    router.push('/')
+  }
 
   useEffect(() => {
     if (session?.user) {
@@ -56,9 +64,19 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
   const { messagesRef, scrollRef, visibilityRef, isAtBottom, scrollToBottom } =
     useScrollAnchor()
 
+  const resetState = () => {
+    setInput('');
+    setMessages([]);
+    setAIState({ messages: [] });
+  };
+
+  useEffect(() => {
+    resetState();
+  }, []);
+
   return (
     <div
-      className="group w-full overflow-auto pl-0 peer-[[data-state=open]]:lg:pl-[250px] peer-[[data-state=open]]:xl:pl-[300px]"
+      className="group w-full overflow-auto pl-0 peer-[[data-state=open]]:lg:pl-[250px] peer-[[data-state=open]]:xl:pl-[300px] relative"
       ref={scrollRef}
     >
       <div
@@ -73,12 +91,22 @@ export function Chat({ id, className, session, missingKeys }: ChatProps) {
         <div className="w-full h-px" ref={visibilityRef} />
       </div>
       <ChatPanel
-          id={id}
-          input={input}
-          setInput={setInput}
-          isAtBottom={isAtBottom}
+        id={id}
+        input={input}
+        setInput={setInput}
+        isAtBottom={isAtBottom}
         scrollToBottom={scrollToBottom}
       />
+      <button
+        onClick={() => {
+          resetState();
+          router.push('/');
+        }}
+        className="fixed bottom-4 right-4 bg-black hover:bg-gray-800 text-white p-2 rounded-full shadow-lg transition-colors duration-200 z-50"
+        aria-label="채팅 초기화 및 홈으로 이동"
+      >
+        <ArrowPathIcon className="w-6 h-6" />
+      </button>
     </div>
   )
 }

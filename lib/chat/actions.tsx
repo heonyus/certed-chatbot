@@ -139,7 +139,7 @@ async function submitUserMessage(content: string) {
             <type>General Inquiry</type>
             <task>Ask the user what specific labor issue they need help with and provide relevant guidance.</task>
             <example>
-                "안녕하세요! 저는 노무사 AI입니다. 어떤 문제가 있으신가요? 구체적으로 말씀해주시면 도와드릴 수 있습니다."
+                "안녕하세요! 저는 노무사 AI입니다. 어떤 문제가 있으신가요? ��체적으로 말씀해주시면 도와드릴 수 있습니다."
             </example>
         </mission>
         
@@ -270,25 +270,22 @@ async function submitUserMessage(content: string) {
       return textNode
     },
     tools: {
-      listStocks: {
-        description: 'List three imaginary stocks that are trending.',
+      calculateSeverancePay: {
+        description: '퇴직금 계산하기',
         parameters: z.object({
-          stocks: z.array(
-            z.object({
-              symbol: z.string().describe('The symbol of the stock'),
-              price: z.number().describe('The price of the stock'),
-              delta: z.number().describe('The change in price of the stock')
-            })
-          )
+          monthlyWage: z.number().describe('월 평균 임금'),
+          yearsWorked: z.number().describe('근속 연수')
         }),
-        generate: async function* ({ stocks }) {
+        generate: async function* ({ monthlyWage, yearsWorked }) {
           yield (
             <BotCard>
-              <StocksSkeleton />
+              <div>퇴직금 계산 중...</div>
             </BotCard>
           )
 
           await sleep(1000)
+
+          const severancePay = monthlyWage * yearsWorked
 
           const toolCallId = nanoid()
 
@@ -302,9 +299,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-call',
-                    toolName: 'listStocks',
+                    toolName: 'calculateSeverancePay',
                     toolCallId,
-                    args: { stocks }
+                    args: { monthlyWage, yearsWorked }
                   }
                 ]
               },
@@ -314,9 +311,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-result',
-                    toolName: 'listStocks',
+                    toolName: 'calculateSeverancePay',
                     toolCallId,
-                    result: stocks
+                    result: { severancePay }
                   }
                 ]
               }
@@ -325,31 +322,29 @@ async function submitUserMessage(content: string) {
 
           return (
             <BotCard>
-              <Stocks props={stocks} />
+              <div>
+                퇴직금 계산 결과: {severancePay.toLocaleString()}원
+              </div>
             </BotCard>
           )
         }
       },
-      showStockPrice: {
-        description:
-          'Get the current stock price of a given stock or currency. Use this to show the price to the user.',
+      calculateOvertimePay: {
+        description: '초과 근무 수당 계산하기',
         parameters: z.object({
-          symbol: z
-            .string()
-            .describe(
-              'The name or symbol of the stock or currency. e.g. DOGE/AAPL/USD.'
-            ),
-          price: z.number().describe('The price of the stock.'),
-          delta: z.number().describe('The change in price of the stock')
+          hourlyWage: z.number().describe('시간당 임금'),
+          overtimeHours: z.number().describe('초과 근무 시간')
         }),
-        generate: async function* ({ symbol, price, delta }) {
+        generate: async function* ({ hourlyWage, overtimeHours }) {
           yield (
             <BotCard>
-              <StockSkeleton />
+              <div>초과 근무 수당 계산 중...</div>
             </BotCard>
           )
 
           await sleep(1000)
+
+          const overtimePay = hourlyWage * 1.5 * overtimeHours
 
           const toolCallId = nanoid()
 
@@ -363,9 +358,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-call',
-                    toolName: 'showStockPrice',
+                    toolName: 'calculateOvertimePay',
                     toolCallId,
-                    args: { symbol, price, delta }
+                    args: { hourlyWage, overtimeHours }
                   }
                 ]
               },
@@ -375,9 +370,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-result',
-                    toolName: 'showStockPrice',
+                    toolName: 'calculateOvertimePay',
                     toolCallId,
-                    result: { symbol, price, delta }
+                    result: { overtimePay }
                   }
                 ]
               }
@@ -386,147 +381,31 @@ async function submitUserMessage(content: string) {
 
           return (
             <BotCard>
-              <Stock props={{ symbol, price, delta }} />
+              <div>
+                초과 근무 수당 계산 결과: {overtimePay.toLocaleString()}원
+              </div>
             </BotCard>
           )
         }
       },
-      showStockPurchase: {
-        description:
-          'Show price and the UI to purchase a stock or currency. Use this if the user wants to purchase a stock or currency.',
+      calculateAnnualLeave: {
+        description: '연차 휴가 일수 계산하기',
         parameters: z.object({
-          symbol: z
-            .string()
-            .describe(
-              'The name or symbol of the stock or currency. e.g. DOGE/AAPL/USD.'
-            ),
-          price: z.number().describe('The price of the stock.'),
-          numberOfShares: z
-            .number()
-            .optional()
-            .describe(
-              'The **number of shares** for a stock or currency to purchase. Can be optional if the user did not specify it.'
-            )
+          workingDays: z.number().describe('근무 일수')
         }),
-        generate: async function* ({ symbol, price, numberOfShares = 100 }) {
-          const toolCallId = nanoid()
+        generate: async function* ({ workingDays }) {
+          yield (
+            <BotCard>
+              <div>연차 휴가 일수 계산 중...</div>
+            </BotCard>
+          )
 
-          if (numberOfShares <= 0 || numberOfShares > 1000) {
-            aiState.done({
-              ...aiState.get(),
-              messages: [
-                ...aiState.get().messages,
-                {
-                  id: nanoid(),
-                  role: 'assistant',
-                  content: [
-                    {
-                      type: 'tool-call',
-                      toolName: 'showStockPurchase',
-                      toolCallId,
-                      args: { symbol, price, numberOfShares }
-                    }
-                  ]
-                },
-                {
-                  id: nanoid(),
-                  role: 'tool',
-                  content: [
-                    {
-                      type: 'tool-result',
-                      toolName: 'showStockPurchase',
-                      toolCallId,
-                      result: {
-                        symbol,
-                        price,
-                        numberOfShares,
-                        status: 'expired'
-                      }
-                    }
-                  ]
-                },
-                {
-                  id: nanoid(),
-                  role: 'system',
-                  content: `[User has selected an invalid amount]`
-                }
-              ]
-            })
+          await sleep(1000)
 
-            return <BotMessage content={'Invalid amount'} />
-          } else {
-            aiState.done({
-              ...aiState.get(),
-              messages: [
-                ...aiState.get().messages,
-                {
-                  id: nanoid(),
-                  role: 'assistant',
-                  content: [
-                    {
-                      type: 'tool-call',
-                      toolName: 'showStockPurchase',
-                      toolCallId,
-                      args: { symbol, price, numberOfShares }
-                    }
-                  ]
-                },
-                {
-                  id: nanoid(),
-                  role: 'tool',
-                  content: [
-                    {
-                      type: 'tool-result',
-                      toolName: 'showStockPurchase',
-                      toolCallId,
-                      result: {
-                        symbol,
-                        price,
-                        numberOfShares
-                      }
-                    }
-                  ]
-                }
-              ]
-            })
-
-            return (
-              <BotCard>
-                <Purchase
-                  props={{
-                    numberOfShares,
-                    symbol,
-                    price: +price,
-                    status: 'requires_action'
-                  }}
-                />
-              </BotCard>
-            )
+          let annualLeave = 0
+          if (workingDays >= 80) {
+            annualLeave = Math.floor(workingDays / 30) + 11
           }
-        }
-      },
-      getEvents: {
-        description:
-          'List funny imaginary events between user highlighted dates that describe stock activity.',
-        parameters: z.object({
-          events: z.array(
-            z.object({
-              date: z
-                .string()
-                .describe('The date of the event, in ISO-8601 format'),
-              headline: z.string().describe('The headline of the event'),
-              description: z.string().describe('The description of the event')
-            })
-          )
-        }),
-        generate: async function* ({ events }) {
-          yield (
-            <BotCard>
-              <EventsSkeleton />
-            </BotCard>
-          )
-
-          await sleep(1000)
 
           const toolCallId = nanoid()
 
@@ -540,9 +419,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-call',
-                    toolName: 'getEvents',
+                    toolName: 'calculateAnnualLeave',
                     toolCallId,
-                    args: { events }
+                    args: { workingDays }
                   }
                 ]
               },
@@ -552,9 +431,9 @@ async function submitUserMessage(content: string) {
                 content: [
                   {
                     type: 'tool-result',
-                    toolName: 'getEvents',
+                    toolName: 'calculateAnnualLeave',
                     toolCallId,
-                    result: events
+                    result: { annualLeave }
                   }
                 ]
               }
@@ -563,7 +442,68 @@ async function submitUserMessage(content: string) {
 
           return (
             <BotCard>
-              <Events props={events} />
+              <div>
+                연차 휴가 일수 계산 결과: {annualLeave}일
+              </div>
+            </BotCard>
+          )
+        }
+      },
+      checkLegalWorkingHours: {
+        description: '법정 근로시간 준수 여부 확인하기',
+        parameters: z.object({
+          weeklyHours: z.number().describe('주간 근로시간')
+        }),
+        generate: async function* ({ weeklyHours }) {
+          yield (
+            <BotCard>
+              <div>법정 근로시간 준수 여부 확인 중...</div>
+            </BotCard>
+          )
+
+          await sleep(1000)
+
+          const isLegal = weeklyHours <= 52
+          const message = isLegal
+            ? '법정 근로시간을 준수하고 있습니다.'
+            : '법정 근로시간을 초과하고 있습니다. 주 52시간을 초과하지 않도록 주의해야 합니다.'
+
+          const toolCallId = nanoid()
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'checkLegalWorkingHours',
+                    toolCallId,
+                    args: { weeklyHours }
+                  }
+                ]
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'checkLegalWorkingHours',
+                    toolCallId,
+                    result: { isLegal, message }
+                  }
+                ]
+              }
+            ]
+          })
+
+          return (
+            <BotCard>
+              <div>{message}</div>
             </BotCard>
           )
         }
