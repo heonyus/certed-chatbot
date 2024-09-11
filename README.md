@@ -1,71 +1,56 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="https://chat.vercel.ai/opengraph-image.png">
-  <h1 align="center">Next.js AI Chatbot</h1>
-</a>
+# 채팅 시스템 구조 설명
 
-<p align="center">
-  An open-source AI chatbot app template built with Next.js, the Vercel AI SDK, OpenAI, and Vercel KV.
-</p>
+## 채팅 API
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a> ·
-  <a href="#authors"><strong>Authors</strong></a>
-</p>
-<br/>
+채팅 API는 주로 `components/chat.tsx` 파일에서 구현되어 있습니다. 이 파일에서는 AI 상태 관리와 메시지 처리를 담당합니다.
 
-## Features
-
-- [Next.js](https://nextjs.org) App Router
-- React Server Components (RSCs), Suspense, and Server Actions
-- [Vercel AI SDK](https://sdk.vercel.ai/docs) for streaming chat UI
-- Support for OpenAI (default), Anthropic, Cohere, Hugging Face, or custom AI chat models and/or LangChain
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - [Radix UI](https://radix-ui.com) for headless component primitives
-  - Icons from [Phosphor Icons](https://phosphoricons.com)
-- Chat History, rate limiting, and session storage with [Vercel KV](https://vercel.com/storage/kv)
-- [NextAuth.js](https://github.com/nextauthjs/next-auth) for authentication
-
-## Model Providers
-
-This template ships with OpenAI `gpt-3.5-turbo` as the default. However, thanks to the [Vercel AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), [Hugging Face](https://huggingface.co), or using [LangChain](https://js.langchain.com) with just a few lines of code.
-
-## Deploy Your Own
-
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?demo-title=Next.js+Chat&demo-description=A+full-featured%2C+hackable+Next.js+AI+chatbot+built+by+Vercel+Labs&demo-url=https%3A%2F%2Fchat.vercel.ai%2F&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4aVPvWuTmBvzM5cEdRdqeW%2F4234f9baf160f68ffb385a43c3527645%2FCleanShot_2023-06-16_at_17.09.21.png&project-name=Next.js+Chat&repository-name=nextjs-chat&repository-url=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-chatbot&from=templates&skippable-integrations=1&env=OPENAI_API_KEY%2CAUTH_SECRET&envDescription=How+to+get+these+env+vars&envLink=https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fai-chatbot%2Fblob%2Fmain%2F.env.example&teamCreateStatus=hidden&stores=[{"type":"kv"}])
-
-## Creating a KV Database Instance
-
-Follow the steps outlined in the [quick start guide](https://vercel.com/docs/storage/vercel-kv/quickstart#create-a-kv-database) provided by Vercel. This guide will assist you in creating and configuring your KV database instance on Vercel, enabling your application to interact with it.
-
-Remember to update your environment variables (`KV_URL`, `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN`) in the `.env` file with the appropriate credentials provided during the KV database setup.
-
-## Running locally
-
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
-
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various OpenAI and authentication provider accounts.
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
-
-```bash
-pnpm install
-pnpm dev
+주요 부분:
+```typescript:components/chat.tsx
+startLine: 23
+endLine: 75
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000/).
+여기서 `useUIState`, `useAIState`, `useActions` 훅을 사용하여 채팅 상태를 관리하고 있습니다.
 
-## Authors
+## 메시지 송신
 
-This library is created by [Vercel](https://vercel.com) and [Next.js](https://nextjs.org) team members, with contributions from:
+사용자 메시지 전송은 주로 `components/chat-panel.tsx`에서 이루어집니다:
 
-- Jared Palmer ([@jaredpalmer](https://twitter.com/jaredpalmer)) - [Vercel](https://vercel.com)
-- Shu Ding ([@shuding\_](https://twitter.com/shuding_)) - [Vercel](https://vercel.com)
-- shadcn ([@shadcn](https://twitter.com/shadcn)) - [Vercel](https://vercel.com)
+```typescript:components/chat-panel.tsx
+startLine: 76
+endLine: 93
+```
+
+`submitUserMessage` 함수를 사용하여 사용자 메시지를 전송하고 있습니다.
+
+## 메시지 수신 및 표시
+
+메시지 수신 및 표시는 `components/chat-list.tsx`에서 처리됩니다:
+
+```typescript:components/chat-list.tsx
+startLine: 11
+endLine: 26
+```
+
+이 컴포넌트는 받은 메시지들을 순회하며 표시합니다.
+
+## 메시지 렌더링
+
+개별 메시지의 렌더링은 `components/chat-message.tsx`에서 이루어집니다:
+
+```typescript:components/chat-message.tsx
+startLine: 18
+endLine: 80
+```
+
+이 컴포넌트는 메시지의 역할(사용자 또는 AI)에 따라 다르게 스타일링하여 표시합니다.
+
+## 추가 기능
+
+1. 코드 블록 처리: `components/ui/codeblock.tsx`
+2. 메시지 액션 (복사 등): `components/chat-message-actions.tsx`
+3. 채팅 공유: `components/chat-share-dialog.tsx`
+
+## 주의사항
+
+이 프로젝트는 Next.js와 React Server Components를 사용하고 있어, 일부 로직이 서버 사이드에서 실행될 수 있습니다. 클라이언트 사이드 로직과 서버 사이드 로직을 구분하여 이해하는 것이 중요합니다.
